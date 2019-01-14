@@ -7,9 +7,9 @@
 #define TIMER_ID 0
 #define TIMER_INTERVAL 400
 
-/* Posstavljam dimenzije matrice */
+/* Postavljam dimenzije matrice */
 #define MAX_X 12
-#define  MAX_Y 21
+#define  MAX_Y 22
 
 /* Deklarisanje callback funkcija */
 static void on_keyboard(unsigned char key, int x, int y);
@@ -23,15 +23,22 @@ static void nacrtaj_okvir(void);
 static void sakri_figuru(void);
 static void iscrtaj_figuru(int x);
 static void popuni_matricu(void);
+static void resetuj_matricu(void);
+static void ispisi_matricu_u_terminalu(void);
 
 
 
 /* Deklarisanje globalnih promenljivi */
 static int window_width, window_height;
-static animation_ongoing;
+static int animation_ongoing;
 static int matrica[MAX_Y][MAX_X];
 static int rotiraj_scenu = 0;
 static int random_broj;
+static int broj_rotacija = 0;
+static int jedinstveni_broj;
+static int rotiraj = 0;
+static int transliraj = 0;
+static int x_trenutno = 0, y_trenutno = 0;
 
 
 int main(int argc, char **argv){
@@ -56,6 +63,10 @@ int main(int argc, char **argv){
 
 	random_broj = (rand() % 7) + 1;
 	animation_ongoing = 0;
+	broj_rotacija = 0;
+
+	resetuj_matricu();
+	// ispisi_matricu_u_terminalu();
 
 	/* OpenGL inicijalizacija */
 	glClearColor(0, 0, 0, 0);
@@ -149,9 +160,21 @@ static void on_display(void){
 		nacrtaj_okvir();
 	glPopMatrix();
 
+	/* Sakrivam figuru na vrhu */
+	glPushMatrix();
+		sakri_figuru();
+	glPopMatrix();
+
 	/* Iscrtavam figuru */
 	glPushMatrix();
-		iscrtaj_figuru(random_broj);
+		// iscrtaj_figuru(random_broj);
+		iscrtaj_figuru(1);
+		// iscrtaj_figuru(2);
+		// iscrtaj_figuru(3);
+		// iscrtaj_figuru(4);
+		// iscrtaj_figuru(5);
+		// iscrtaj_figuru(6);
+		// iscrtaj_figuru(7);
 	glPopMatrix();
 
 	glutSwapBuffers();
@@ -171,7 +194,6 @@ static void nacrtaj_okvir(void){
 	glScalef(2, 4.2, 0.2);
 	glColor3f(1, 1, 1);
 	glutWireCube(1);
-	/* sakri_figuru(); */
 }
 
 /* Sakrivam figuru na vrhu. */
@@ -182,10 +204,256 @@ static void sakri_figuru(void){
 	glutSolidCube(1);
 }
 
+/* Iscrtava se figura i dodeljuje joj se jedinstveni broj u zavisnosti od pozicije */
 static void iscrtaj_figuru(int x){
+
+	/* Iscrtava se linija */
+	if(x == 1){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 1;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 2;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 3;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 4;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(-3, 0, 0);
+		glutSolidCube(1);
+
+	}
+
+	/* Iscrtava se L */
+	if(x == 2){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 5;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 6;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 7;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 8;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(-1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(2, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(0, 1, 0);
+		glutSolidCube(1);
+	}
+
+	/* Iscrtava se obrnuto L */
+	if(x == 3){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 9;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 10;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 11;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 12;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(-2, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(0, 1, 0);
+		glutSolidCube(1);
+	}
+
+	/* Iscrtava se T */
+	if(x == 4){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 13;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 14;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 15;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 16;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 12 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(-2, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(1, -1, 0);
+		glutSolidCube(1);
+
+	}
+
+	/* Iscrtava se Z */
+	if(x == 5){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 17;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 18;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 19;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 20;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(-1, 1, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(-1, 0, 0);
+		glutSolidCube(1);
+	}
+
+	/* Iscrtava se obrnuto Z */
+	if(x == 6){
+		if(broj_rotacija%4 == 0)
+			jedinstveni_broj = 21;
+		if(broj_rotacija%4 == 1)
+			jedinstveni_broj = 22;
+		if(broj_rotacija%4 == 2)
+			jedinstveni_broj = 23;
+		if(broj_rotacija%4 == 3)
+			jedinstveni_broj = 24;
+
+		glScalef(0.2, 0.2, 0.2);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+		glRotatef(rotiraj, 0, 0, 1);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(-1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(1, 1, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+	}
+
+	/* Iscrtava se kvadrat */
+	if(x == 7){
+		jedinstveni_broj = 0;
+
+		glScalef(0.2, 0.2, 0.2);
+		// glRotatef(rotiraj, 0, 0, 0);
+		glTranslatef(-0.5 + transliraj, 11 - y_trenutno, 0);
+
+		glColor3f(0, 0, 1);
+		glTranslatef(0, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(0, 1, 0);
+		glTranslatef(1, 0, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 0, 0);
+		glTranslatef(0, 1, 0);
+		glutSolidCube(1);
+
+		glColor3f(1, 1, 0);
+		glTranslatef(-1, 0, 0);
+		glutSolidCube(1);
+	}
 
 }
 
 static void popuni_matricu(void){
+
+}
+
+static void resetuj_matricu(void){
+	int i, j;
+
+	for(i=0; i<MAX_X; i++)
+		for (j=0; j<MAX_Y; j++)
+			if(i == 0 || i== 11 || j == 21)
+				matrica[j][i] = 1;
+			else
+				matrica[j][i] = 0;
+		
+}
+static void ispisi_matricu_u_terminalu(void){
+	int i, j;
+
+	for (j=0; j<MAX_Y; j++)	{
+		for(i=0; i<MAX_X; i++)
+				if(matrica[j][i] == 1)
+					printf("1 ");
+				else if(matrica[j][i] == 0)
+					printf("0 ");
+		printf("\n");
+			
+	}
 
 }
