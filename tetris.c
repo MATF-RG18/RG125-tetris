@@ -27,6 +27,7 @@ static void resetuj_matricu(void);
 static void ispisi_matricu_u_terminalu(void);
 static void kolizije(void);
 static void rotacije_na_granicama(void);
+static void iscrtavanje_matrice_na_ekran(void);
 
 
 
@@ -71,7 +72,7 @@ int main(int argc, char **argv){
 	broj_rotacija = 0;
 
 	resetuj_matricu();
-	// ispisi_matricu_u_terminalu();
+	ispisi_matricu_u_terminalu();
 
 	/* OpenGL inicijalizacija */
 	glClearColor(0, 0, 0, 0);
@@ -191,14 +192,20 @@ static void on_display(void){
 	/* Iscrtavam figuru */
 	glPushMatrix();
 		// iscrtaj_figuru(random_broj);
-		// iscrtaj_figuru(1);
+		iscrtaj_figuru(1);
 		// iscrtaj_figuru(2);
 		// iscrtaj_figuru(3);
 		// iscrtaj_figuru(4);
 		// iscrtaj_figuru(5);
-		iscrtaj_figuru(6);
+		// iscrtaj_figuru(6);
 		// iscrtaj_figuru(7);
 	glPopMatrix();
+
+	/* Iscrtavam matricu */
+	glPushMatrix();
+		iscrtavanje_matrice_na_ekran();
+	glPopMatrix();
+	
 
 	glutSwapBuffers();
 }
@@ -210,6 +217,7 @@ static void on_timer(int value){
 	if (animation_ongoing)
 	{
 		kolizije();
+		popuni_matricu();
 	}
 
 
@@ -458,8 +466,162 @@ static void iscrtaj_figuru(int x){
 
 }
 
+/* Kada padne figura zabelezi je u matrici. */
 static void popuni_matricu(void){
-
+	if(pala_je_figura){
+		switch(jedinstveni_broj){
+			case 0:
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno + 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				break;
+			case 1:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno + 2] = 1;
+				break;
+			case 2:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno - 2][x_trenutno] = 1;
+				break;
+			case 3:
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno - 2] = 1;
+				break;
+			case 4:
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno + 2][x_trenutno] = 1;
+				break;
+			case 5:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno + 1] = 1;
+				break;
+			case 6:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno - 1] = 1;
+				break;
+			case 7:
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno + 1][x_trenutno - 1] = 1;
+				break;
+			case 8:
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno + 1] = 1;
+				break;
+			case 9:
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno - 1] = 1;
+				break;
+			case 10:
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno - 1] = 1;
+				break;
+			case 11:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno + 1][x_trenutno + 1] = 1;
+				break;
+			case 12:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno + 1] = 1;
+				break;
+			case 13:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				break;
+			case 14:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				break;
+			case 15:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				break;
+			case 16:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				break;
+			case 17:
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno - 1] = 1;
+				break;
+			case 18:
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno + 1][x_trenutno - 1] = 1;
+				break;
+			case 19:
+				matrica[y_trenutno][x_trenutno -1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno + 1] = 1;
+				break;
+			case 20:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno + 1] = 1;
+				break;
+			case 21:
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno - 1][x_trenutno + 1] = 1;
+				break;
+			case 22:
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno - 1] = 1;
+				matrica[y_trenutno - 1][x_trenutno - 1] = 1;
+				break;
+			case 23:
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno] = 1;
+				matrica[y_trenutno + 1][x_trenutno - 1] = 1;
+				break;
+			case 24:
+				matrica[y_trenutno - 1][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno] = 1;
+				matrica[y_trenutno][x_trenutno + 1] = 1;
+				matrica[y_trenutno + 1][x_trenutno + 1] = 1;
+				break;
+		}
+	}
 }
 
 static void resetuj_matricu(void){
@@ -542,6 +704,7 @@ static void kolizije(void){
 				levo_desno = 0;
 			}
 			else{
+				// break;
 			}
 			/* Kretanje desno. */
 			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 3]){
@@ -550,6 +713,7 @@ static void kolizije(void){
 				levo_desno = 0;
 			}
 			else{
+				// break;
 			}
 			break;
 		case 2:
@@ -876,7 +1040,7 @@ static void kolizije(void){
 		/* Jedinstveni brojevi za T */
 		case 13:
 			/* Proverava da li moze da pada. */
-			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
 				pala_je_figura = 0;
 				y_trenutno++;
 			}
@@ -1223,7 +1387,7 @@ static void kolizije(void){
 				transliraj += 1;
 				levo_desno = 0;
 			}
-			else{
+			else{/
 			}
 			break;
 	}
@@ -1232,8 +1396,6 @@ static void kolizije(void){
 
 static void rotacije_na_granicama(void){
 	switch(jedinstveni_broj){
-
-// ISPOCETKA CELU ROTACIJU!!!!!
 
 		case 1:
 			/* Pita samo da li moze da se rotira */
@@ -1569,4 +1731,22 @@ static void rotacije_na_granicama(void){
 			break;
 	}
 	
+}
+
+/* Konstantno treba da iscrtava matricu na ekran */
+static void iscrtavanje_matrice_na_ekran(void){
+	int i, j;
+	for(j = 1; j < MAX_Y-1; j++){
+		for(i = 1; i < MAX_X-1; i++){
+			if(matrica[j][i]){
+				glPushMatrix();
+					glColor3f(0.75, 0.75, 0.75);
+					glScalef(0.2, 0.2, 0.2);
+					glTranslatef(-5.5 + i, 11 - j, 0);
+					glutSolidCube(1);
+				glPopMatrix();
+			}
+		}
+	}
+
 }
