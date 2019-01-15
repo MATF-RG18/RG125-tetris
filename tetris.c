@@ -25,6 +25,7 @@ static void iscrtaj_figuru(int x);
 static void popuni_matricu(void);
 static void resetuj_matricu(void);
 static void ispisi_matricu_u_terminalu(void);
+static void kolizije(void);
 
 
 
@@ -38,7 +39,10 @@ static int broj_rotacija = 0;
 static int jedinstveni_broj;
 static int rotiraj = 0;
 static int transliraj = 0;
-static int x_trenutno = 0, y_trenutno = 0;
+static int x_trenutno = 5, y_trenutno = 0;
+static int levo_desno = 0;
+static int pala_je_figura = 1;
+static int x_stop,y_stop;
 
 
 int main(int argc, char **argv){
@@ -100,6 +104,15 @@ static void on_keyboard(unsigned char key, int x, int y){
 		case 'r':
 		case 'R':
 			/* Restartovanje igre */
+			random_broj = (rand() % 7) + 1;
+			levo_desno = 0;
+			broj_rotacija = 0;
+			rotiraj = 0;
+			transliraj = 0;
+			x_trenutno = 5;
+			y_trenutno = 0;
+			animation_ongoing = 0;
+			glutPostRedisplay();
 			break;
 		/* Rotiranje scene */
 		case 'q':
@@ -119,12 +132,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 static void on_specijalkey(int key, int x, int y){
 	switch(key){
 		case GLUT_KEY_UP:
+			if (animation_ongoing)
+			{
+				broj_rotacija++;
+				rotiraj += 90;
+			}
 			break;
 		case GLUT_KEY_DOWN:
 			break;
 		case GLUT_KEY_LEFT:
+			if(animation_ongoing)
+				levo_desno = -1;
 			break;
 		case GLUT_KEY_RIGHT:
+			if(animation_ongoing)
+				levo_desno = 1;
 			break;
 	}
 	glutPostRedisplay();
@@ -168,14 +190,23 @@ static void on_display(void){
 	/* Iscrtavam figuru */
 	glPushMatrix();
 		// iscrtaj_figuru(random_broj);
-		iscrtaj_figuru(1);
+		// iscrtaj_figuru(1);
 		// iscrtaj_figuru(2);
 		// iscrtaj_figuru(3);
 		// iscrtaj_figuru(4);
 		// iscrtaj_figuru(5);
-		// iscrtaj_figuru(6);
+		iscrtaj_figuru(6);
 		// iscrtaj_figuru(7);
 	glPopMatrix();
+
+	printf("transliraj : %d\n", transliraj);
+	printf("broj_rotacija : %d\n", broj_rotacija);
+	printf("rotiraj : %d\n", rotiraj);
+	printf("x_trenutno : %d\n", x_trenutno);
+	printf("y_trenutno : %d\n", y_trenutno);
+	printf("levo_desno : %d\n", levo_desno);
+	printf("!matrica[y_trenutno - 1][x_trenutno] %d \n !matrica[y_trenutno][x_trenutno + 1] %d \n !matrica[y_trenutno + 1][x_trenutno + 1] %d \n",
+		matrica[y_trenutno - 1][x_trenutno], matrica[y_trenutno][x_trenutno + 1], matrica[y_trenutno + 1][x_trenutno + 1]);
 
 	glutSwapBuffers();
 }
@@ -184,6 +215,13 @@ static void on_timer(int value){
 	if(value != TIMER_ID)
 		return;
 
+	if (animation_ongoing)
+	{
+		// y_trenutno += 1;
+		kolizije();
+	}
+
+
 	glutPostRedisplay();
 	if(animation_ongoing)
 		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
@@ -191,7 +229,8 @@ static void on_timer(int value){
 }
 /* Crta se okvir. */
 static void nacrtaj_okvir(void){
-	glScalef(2, 4.2, 0.2);
+	glTranslatef(0, 0.1, 0);
+	glScalef(2, 4, 0.2);
 	glColor3f(1, 1, 1);
 	glutWireCube(1);
 }
@@ -454,6 +493,800 @@ static void ispisi_matricu_u_terminalu(void){
 					printf("0 ");
 		printf("\n");
 			
+	}
+
+}
+
+/* Za svaku figuru u svakoj poziciji, preko jedinstvenog broja,
+proverava gde moze da se krece i kada dolazi do poziva nove figure. */
+static void kolizije(void){
+	switch(jedinstveni_broj){
+		/* Jedinstveni broj za kocku. */
+		case 0:
+			/* Proverava da li kvadrat moze da pada(da se krece ka dole). */
+			if(!matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Proverava da li figura moze da se krece levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno - 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Proverava da li figura moze da se krece desno */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno - 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za liniju */
+		case 1:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+				// break;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 3]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+				// break;
+			}
+			break;
+		case 2:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;			
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1] && !matrica[y_trenutno + 2][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 3:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 3]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 4:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 3][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1] && !matrica[y_trenutno + 2][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za L */
+		case 5:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno+ 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno - 1][x_trenutno]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 6:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 2] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 7:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno - 1] && !matrica[y_trenutno +1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 8:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 2] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za obrnuto L */
+		case 9:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno - 1][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno] && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 10:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno + 1][x_trenutno - 2] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno - 1][x_trenutno]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 11:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno-1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 2][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 12:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno +1][x_trenutno]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 2] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za T */
+		case 13:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 14:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 15:
+			/* Proverava da li moze da pada. */
+		/* Zasto se ne proverava y_tr+1?? tj. zasto mi za to ne radi?? */
+			if(!matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno] && !matrica[y_trenutno][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 16:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za Z */
+		case 17:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 2] && !matrica[y_trenutno][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 18:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno - 1] && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+			// 	figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 19:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno + 2][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;	
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 20:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 2] && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		/* Jedinstveni brojevi za obrnuto Z */
+		case 21:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno] && !matrica[y_trenutno][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 2] && !matrica[y_trenutno][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 22:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 2] && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+		/* Opet nema logike. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 1] && !matrica[y_trenutno + 1][x_trenutno + 0]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 23:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 2][x_trenutno - 1] && !matrica[y_trenutno + 2][x_trenutno] && !matrica[y_trenutno + 1][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno][x_trenutno - 1] && !matrica[y_trenutno + 1][x_trenutno - 2]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno +1][x_trenutno + 1]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			break;
+		case 24:
+			/* Proverava da li moze da pada. */
+			if(!matrica[y_trenutno + 1][x_trenutno] && !matrica[y_trenutno + 2][x_trenutno + 1]){
+				pala_je_figura = 0;
+				y_trenutno++;
+			}
+			else{
+				x_stop = x_trenutno;
+				y_stop = y_trenutno;
+				pala_je_figura = 1;
+				animation_ongoing = 0;
+			}
+			/* Kretanje levo. */
+			if(levo_desno == -1 && !matrica[y_trenutno - 1][x_trenutno] && !matrica[y_trenutno][x_trenutno] && !matrica[y_trenutno +1][x_trenutno - 1]){
+				x_trenutno -= 1;
+				transliraj -= 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;
+			}
+			/* Kretanje desno. */
+			if(levo_desno == 1 && !matrica[y_trenutno - 1][x_trenutno + 1] && !matrica[y_trenutno][x_trenutno + 2] && !matrica[y_trenutno + 1][x_trenutno + 2]){
+				x_trenutno += 1;
+				transliraj += 1;
+				levo_desno = 0;
+			}
+			else{
+				// figura_stop = 1;/
+			}
+			break;
 	}
 
 }
